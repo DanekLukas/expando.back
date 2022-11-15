@@ -8,10 +8,15 @@
   "license": "MIT",
   "scripts": {
     "build": "esbuild index.ts --bundle --platform=node --outfile=./dist/index.cjs",
-    "start": "node dist/index.cjs"
+    "start": "node dist/index.cjs",
+    "test": "ts-node node_modules/tape/bin/tape tests/test.ts"
   },
   "dependencies": {
+    "@types/tape": "^4.13.2",
+    "@types/websocket": "^1.0.5",
     "express": "^4.18.2",
+    "tape": "^5.6.1",
+    "ts-node": "^10.9.1",
     "typescript": "^4.8.4",
     "ws": "^8.11.0"
   },

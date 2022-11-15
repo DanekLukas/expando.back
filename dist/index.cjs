@@ -2676,10 +2676,10 @@ var require_websocket_server = __commonJS({
             process.nextTick(emitClose, this);
           }
         } else {
-          const server2 = this._server;
+          const server = this._server;
           this._removeListeners();
           this._removeListeners = this._server = null;
-          server2.close(() => {
+          server.close(() => {
             emitClose(this);
           });
         }
@@ -2833,18 +2833,18 @@ var require_websocket_server = __commonJS({
       }
     };
     module2.exports = WebSocketServer2;
-    function addListeners(server2, map) {
+    function addListeners(server, map) {
       for (const event of Object.keys(map))
-        server2.on(event, map[event]);
+        server.on(event, map[event]);
       return function removeListeners() {
         for (const event of Object.keys(map)) {
-          server2.removeListener(event, map[event]);
+          server.removeListener(event, map[event]);
         }
       };
     }
-    function emitClose(server2) {
-      server2._state = CLOSED;
-      server2.emit("close");
+    function emitClose(server) {
+      server._state = CLOSED;
+      server.emit("close");
     }
     function socketOnError() {
       this.destroy();
@@ -2863,11 +2863,11 @@ var require_websocket_server = __commonJS({
 ` + Object.keys(headers).map((h) => `${h}: ${headers[h]}`).join("\r\n") + "\r\n\r\n" + message
       );
     }
-    function abortHandshakeOrEmitwsClientError(server2, req, socket, code, message) {
-      if (server2.listenerCount("wsClientError")) {
+    function abortHandshakeOrEmitwsClientError(server, req, socket, code, message) {
+      if (server.listenerCount("wsClientError")) {
         const err = new Error(message);
         Error.captureStackTrace(err, abortHandshakeOrEmitwsClientError);
-        server2.emit("wsClientError", err, socket, req);
+        server.emit("wsClientError", err, socket, req);
       } else {
         abortHandshake(socket, code, message);
       }
@@ -21270,15 +21270,15 @@ var require_init = __commonJS({
   "node_modules/express/lib/middleware/init.js"(exports) {
     "use strict";
     var setPrototypeOf = require_setprototypeof();
-    exports.init = function(app2) {
+    exports.init = function(app) {
       return function expressInit(req, res, next) {
-        if (app2.enabled("x-powered-by"))
+        if (app.enabled("x-powered-by"))
           res.setHeader("X-Powered-By", "Express");
         req.res = res;
         res.req = req;
         req.next = next;
-        setPrototypeOf(req, app2.request);
-        setPrototypeOf(res, app2.response);
+        setPrototypeOf(req, app.request);
+        setPrototypeOf(res, app.response);
         res.locals = res.locals || /* @__PURE__ */ Object.create(null);
         next();
       };
@@ -23966,15 +23966,15 @@ var require_application = __commonJS({
     var setPrototypeOf = require_setprototypeof();
     var hasOwnProperty = Object.prototype.hasOwnProperty;
     var slice = Array.prototype.slice;
-    var app2 = exports = module2.exports = {};
+    var app = exports = module2.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
-    app2.init = function init() {
+    app.init = function init() {
       this.cache = {};
       this.engines = {};
       this.settings = {};
       this.defaultConfiguration();
     };
-    app2.defaultConfiguration = function defaultConfiguration() {
+    app.defaultConfiguration = function defaultConfiguration() {
       var env = process.env.NODE_ENV || "development";
       this.enable("x-powered-by");
       this.set("etag", "weak");
@@ -24012,7 +24012,7 @@ var require_application = __commonJS({
         }
       });
     };
-    app2.lazyrouter = function lazyrouter() {
+    app.lazyrouter = function lazyrouter() {
       if (!this._router) {
         this._router = new Router({
           caseSensitive: this.enabled("case sensitive routing"),
@@ -24022,7 +24022,7 @@ var require_application = __commonJS({
         this._router.use(middleware.init(this));
       }
     };
-    app2.handle = function handle(req, res, callback) {
+    app.handle = function handle(req, res, callback) {
       var router = this._router;
       var done = callback || finalhandler(req, res, {
         env: this.get("env"),
@@ -24035,7 +24035,7 @@ var require_application = __commonJS({
       }
       router.handle(req, res, done);
     };
-    app2.use = function use(fn) {
+    app.use = function use(fn) {
       var offset = 0;
       var path = "/";
       if (typeof fn !== "function") {
@@ -24073,11 +24073,11 @@ var require_application = __commonJS({
       }, this);
       return this;
     };
-    app2.route = function route(path) {
+    app.route = function route(path) {
       this.lazyrouter();
       return this._router.route(path);
     };
-    app2.engine = function engine(ext, fn) {
+    app.engine = function engine(ext, fn) {
       if (typeof fn !== "function") {
         throw new Error("callback function required");
       }
@@ -24085,7 +24085,7 @@ var require_application = __commonJS({
       this.engines[extension] = fn;
       return this;
     };
-    app2.param = function param(name, fn) {
+    app.param = function param(name, fn) {
       this.lazyrouter();
       if (Array.isArray(name)) {
         for (var i = 0; i < name.length; i++) {
@@ -24096,7 +24096,7 @@ var require_application = __commonJS({
       this._router.param(name, fn);
       return this;
     };
-    app2.set = function set(setting, val) {
+    app.set = function set(setting, val) {
       if (arguments.length === 1) {
         var settings = this.settings;
         while (settings && settings !== Object.prototype) {
@@ -24126,23 +24126,23 @@ var require_application = __commonJS({
       }
       return this;
     };
-    app2.path = function path() {
+    app.path = function path() {
       return this.parent ? this.parent.path() + this.mountpath : "";
     };
-    app2.enabled = function enabled(setting) {
+    app.enabled = function enabled(setting) {
       return Boolean(this.set(setting));
     };
-    app2.disabled = function disabled(setting) {
+    app.disabled = function disabled(setting) {
       return !this.set(setting);
     };
-    app2.enable = function enable(setting) {
+    app.enable = function enable(setting) {
       return this.set(setting, true);
     };
-    app2.disable = function disable(setting) {
+    app.disable = function disable(setting) {
       return this.set(setting, false);
     };
     methods.forEach(function(method) {
-      app2[method] = function(path) {
+      app[method] = function(path) {
         if (method === "get" && arguments.length === 1) {
           return this.set(path);
         }
@@ -24152,7 +24152,7 @@ var require_application = __commonJS({
         return this;
       };
     });
-    app2.all = function all(path) {
+    app.all = function all(path) {
       this.lazyrouter();
       var route = this._router.route(path);
       var args = slice.call(arguments, 1);
@@ -24161,8 +24161,8 @@ var require_application = __commonJS({
       }
       return this;
     };
-    app2.del = deprecate.function(app2.delete, "app.del: Use app.delete instead");
-    app2.render = function render(name, options, callback) {
+    app.del = deprecate.function(app.delete, "app.del: Use app.delete instead");
+    app.render = function render(name, options, callback) {
       var cache = this.cache;
       var done = callback;
       var engines = this.engines;
@@ -24203,9 +24203,9 @@ var require_application = __commonJS({
       }
       tryRender(view, renderOptions, done);
     };
-    app2.listen = function listen() {
-      var server2 = http2.createServer(this);
-      return server2.listen.apply(server2, arguments);
+    app.listen = function listen() {
+      var server = http2.createServer(this);
+      return server.listen.apply(server, arguments);
     };
     function logerror(err) {
       if (this.get("env") !== "test")
@@ -25266,7 +25266,7 @@ var require_response = __commonJS({
       var encoding;
       var req = this.req;
       var type;
-      var app2 = this.app;
+      var app = this.app;
       if (arguments.length === 2) {
         if (typeof arguments[0] !== "number" && typeof arguments[1] === "number") {
           deprecate("res.send(body, status): Use res.status(status).send(body) instead");
@@ -25312,7 +25312,7 @@ var require_response = __commonJS({
           this.set("Content-Type", setCharset(type, "utf-8"));
         }
       }
-      var etagFn = app2.get("etag fn");
+      var etagFn = app.get("etag fn");
       var generateETag = !this.get("ETag") && typeof etagFn === "function";
       var len;
       if (chunk !== void 0) {
@@ -25365,10 +25365,10 @@ var require_response = __commonJS({
           val = arguments[1];
         }
       }
-      var app2 = this.app;
-      var escape2 = app2.get("json escape");
-      var replacer = app2.get("json replacer");
-      var spaces = app2.get("json spaces");
+      var app = this.app;
+      var escape2 = app.get("json escape");
+      var replacer = app.get("json replacer");
+      var spaces = app.get("json spaces");
       var body = stringify(val, replacer, spaces, escape2);
       if (!this.get("Content-Type")) {
         this.set("Content-Type", "application/json");
@@ -25387,12 +25387,12 @@ var require_response = __commonJS({
           val = arguments[1];
         }
       }
-      var app2 = this.app;
-      var escape2 = app2.get("json escape");
-      var replacer = app2.get("json replacer");
-      var spaces = app2.get("json spaces");
+      var app = this.app;
+      var escape2 = app.get("json escape");
+      var replacer = app.get("json replacer");
+      var spaces = app.get("json spaces");
       var body = stringify(val, replacer, spaces, escape2);
-      var callback = this.req.query[app2.get("jsonp callback name")];
+      var callback = this.req.query[app.get("jsonp callback name")];
       if (!this.get("Content-Type")) {
         this.set("X-Content-Type-Options", "nosniff");
         this.set("Content-Type", "application/json");
@@ -25651,7 +25651,7 @@ var require_response = __commonJS({
       return this;
     };
     res.render = function render(view, options, callback) {
-      var app2 = this.req.app;
+      var app = this.req.app;
       var done = callback;
       var opts = options || {};
       var req = this.req;
@@ -25666,7 +25666,7 @@ var require_response = __commonJS({
           return req.next(err);
         self.send(str);
       };
-      app2.render(view, opts, done);
+      app.render(view, opts, done);
     };
     function sendfile(res2, file, options, callback) {
       var done = false;
@@ -25881,19 +25881,19 @@ var require_express = __commonJS({
     var res = require_response();
     exports = module2.exports = createApplication;
     function createApplication() {
-      var app2 = function(req2, res2, next) {
-        app2.handle(req2, res2, next);
+      var app = function(req2, res2, next) {
+        app.handle(req2, res2, next);
       };
-      mixin(app2, EventEmitter.prototype, false);
-      mixin(app2, proto, false);
-      app2.request = Object.create(req, {
-        app: { configurable: true, enumerable: true, writable: true, value: app2 }
+      mixin(app, EventEmitter.prototype, false);
+      mixin(app, proto, false);
+      app.request = Object.create(req, {
+        app: { configurable: true, enumerable: true, writable: true, value: app }
       });
-      app2.response = Object.create(res, {
-        app: { configurable: true, enumerable: true, writable: true, value: app2 }
+      app.response = Object.create(res, {
+        app: { configurable: true, enumerable: true, writable: true, value: app }
       });
-      app2.init();
-      return app2;
+      app.init();
+      return app;
     }
     exports.application = proto;
     exports.request = req;
@@ -26100,7 +26100,7 @@ var import_sender = __toESM(require_sender(), 1);
 var import_websocket = __toESM(require_websocket(), 1);
 var import_websocket_server = __toESM(require_websocket_server(), 1);
 
-// index.ts
+// expando.ts
 var import_express = __toESM(require_express2());
 var import_fs = __toESM(require("fs"));
 var import_dotenv = __toESM(require_main());
@@ -26112,30 +26112,6 @@ var protocol = process.env.PROTOCOL === "https" ? "https" : "http";
 var host = process.env.HOST || "0.0.0.0";
 var port = process.env.PORT || "8080";
 var waitingInterval = parseInt(process.env.INTERVAL || "1000");
-var app = (0, import_express.default)();
-var privateKey = process.env.PRIVATE_KEY ? import_fs.default.readFileSync(process.env.PRIVATE_KEY, "utf8") : void 0;
-var certificate = process.env.CERTIFICATE ? import_fs.default.readFileSync(process.env.CERTIFICATE, "utf8") : void 0;
-var credentials = privateKey && certificate ? { key: privateKey, cert: certificate } : void 0;
-var server = protocol === "https" && credentials ? import_https.default.createServer(credentials, app) : new import_http.default.Server(app);
-process.on("uncaughtException", (e) => {
-  server.close();
-});
-process.on("SIGTERM", () => {
-  server.close();
-});
-app.use(import_express.default.static(staticFldr));
-try {
-  server.listen(port, () => {
-    console.log(`\u26A1\uFE0F[server]: Server is running at ${protocol}://${host}:${port}`);
-  });
-} catch (error) {
-  console.log(error.getMessage());
-}
-var wss = new import_websocket_server.default({
-  host: "0.0.0.0",
-  server,
-  path: "/websockets"
-});
 var clients = {};
 var getCli = () => {
   return Object.entries(clients).map(
@@ -26176,62 +26152,102 @@ var cleanClients = () => {
   else
     false;
 };
-wss.on("connection", (ws) => {
-  ws.on("message", async (data) => {
-    const parsed = JSON.parse(data.toString());
-    const keys = Object.keys(parsed);
-    if (!keys.includes("index"))
-      return;
-    if (!isInCli(parsed.index)) {
-      if (["reset", "ping"].includes(parsed.do)) {
-        clients[parsed.index] = { index: parsed.index, name: "", ws };
-        if (parsed.do === "reset" && parsed.room !== "") {
-          const found = getCli().find(
-            (clnt) => clnt.index && clnt.index !== parsed.index && clnt.ws.readyState === 1
-          );
-          found?.ws.send(JSON.stringify({ do: "pong", index: found.index, to: parsed.index }));
-        }
-      } else {
-        cleanClients();
-        sendPeers();
-        return;
-      }
-    } else {
-      if (!clients[parsed.index].ws.readyState || clients[parsed.index].ws.readyState > 1)
-        clients[parsed.index].ws = ws;
-      else {
-        if (clients[parsed.index].ws !== ws) {
-          clients[parsed.index].ws.close();
-          clients[parsed.index].ws = ws;
-          cleanClients();
-          ws.send(JSON.stringify({ do: "reset" }));
-        }
-      }
-    }
-    switch (parsed.do) {
-      case "ping":
-        if (!sendPeers())
-          clients[parsed.index].ws.send(
-            JSON.stringify({
-              do: "pong",
-              count: getCli().filter((client) => client.ws.readyState === 1).length
-            })
-          );
-        break;
-      case "nick":
-        if (keys.includes("name")) {
-          clients[parsed.index].name = parsed.name;
-        }
-        if (!cleanClients() && !sendPeers()) {
-          ws.send(JSON.stringify({ peers: { index: parsed.index, name: parsed.name } }));
-        }
-        break;
+var expando = () => {
+  const app = (0, import_express.default)();
+  const privateKey = process.env.PRIVATE_KEY ? import_fs.default.readFileSync(process.env.PRIVATE_KEY, "utf8") : void 0;
+  const certificate = process.env.CERTIFICATE ? import_fs.default.readFileSync(process.env.CERTIFICATE, "utf8") : void 0;
+  const credentials = privateKey && certificate ? { key: privateKey, cert: certificate } : void 0;
+  const server = protocol === "https" && credentials ? import_https.default.createServer(credentials, app) : new import_http.default.Server(app);
+  process.on("uncaughtException", (e) => {
+    wss.close();
+    server.close();
+  });
+  process.on("SIGTERM", () => {
+    wss.close();
+    server.close();
+  });
+  app.use(import_express.default.static(staticFldr));
+  try {
+    server.listen(port, () => {
+      console.log(`\u26A1\uFE0F[server]: Server is running at ${protocol}://${host}:${port}`);
+    });
+  } catch (error) {
+    console.log(error.getMessage());
+  }
+  server.on("close", () => {
+    if (intrIntervalRef) {
+      clearInterval(intrIntervalRef);
+      intrIntervalRef = void 0;
     }
   });
-});
-var intrIntervalRef = setInterval(() => {
-  cleanClients();
-}, waitingInterval);
+  const wss = new import_websocket_server.default({
+    host: "0.0.0.0",
+    server,
+    path: "/websockets"
+  });
+  let intrIntervalRef = void 0;
+  wss.on("connection", (ws) => {
+    ws.on("message", async (data) => {
+      const parsed = JSON.parse(data.toString());
+      const keys = Object.keys(parsed);
+      if (!keys.includes("index"))
+        return;
+      if (!isInCli(parsed.index)) {
+        if (["reset", "ping", "nick"].includes(parsed.do)) {
+          clients[parsed.index] = { index: parsed.index, name: "", ws };
+          if (parsed.do === "reset" && parsed.room !== "") {
+            const found = getCli().find(
+              (clnt) => clnt.index && clnt.index !== parsed.index && clnt.ws.readyState === 1
+            );
+            found?.ws.send(JSON.stringify({ do: "pong", index: found.index, to: parsed.index }));
+          }
+        } else {
+          cleanClients();
+          sendPeers();
+          return;
+        }
+      } else {
+        if (!clients[parsed.index].ws.readyState || clients[parsed.index].ws.readyState > 1)
+          clients[parsed.index].ws = ws;
+        else {
+          if (clients[parsed.index].ws !== ws) {
+            clients[parsed.index].ws.close();
+            clients[parsed.index].ws = ws;
+            cleanClients();
+            ws.send(JSON.stringify({ do: "reset" }));
+          }
+        }
+      }
+      switch (parsed.do) {
+        case "ping":
+          if (!sendPeers())
+            clients[parsed.index].ws.send(
+              JSON.stringify({
+                do: "pong",
+                count: getCli().filter((client) => client.ws.readyState === 1).length
+              })
+            );
+          break;
+        case "nick":
+          if (keys.includes("name")) {
+            clients[parsed.index].name = parsed.name;
+          }
+          if (!cleanClients() && !sendPeers()) {
+            ws.send(JSON.stringify({ peers: { index: parsed.index, name: parsed.name } }));
+          }
+          break;
+      }
+    });
+  });
+  intrIntervalRef = setInterval(() => {
+    cleanClients();
+  }, waitingInterval);
+  return { socket: wss, server };
+};
+var expando_default = expando;
+
+// index.ts
+expando_default();
 /*!
  * accepts
  * Copyright(c) 2014 Jonathan Ong

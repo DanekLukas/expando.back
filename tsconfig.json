@@ -8,16 +8,14 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
+    "isolatedModules": false,
     "noEmit": false,
-    "jsx": "react-jsx",
     "target": "ES2022",
     "noImplicitAny": true,
     "moduleResolution": "node",
     "sourceMap": true,
-    "outDir": "build",
+    "outDir": "dist",
     "baseUrl": ".",
-    "module": "ES2020",
     "noFallthroughCasesInSwitch": true,
     "removeComments": true,
     "preserveConstEnums": true,
@@ -29,7 +27,7 @@
     "publicPath": "/build/public"
   },
   "include": [
-    "./**/*"
+    "./*ts"
   ],
   "exclude": [
     "node_modules"
