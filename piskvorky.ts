@@ -8,6 +8,8 @@ import https from 'https'
 
 dotenv.config()
 
+type client = { index: string; ws: WebSocket; name: string; with: string }
+
 const staticFldr = 'build'
 const protocol = process.env.PROTOCOL === 'https' ? 'https' : 'http'
 const host = process.env.HOST || '0.0.0.0'
@@ -15,18 +17,13 @@ const port = process.env.PORT || '8080'
 
 const waitingInterval = parseInt(process.env.INTERVAL || '1000')
 
-type client = { index: string; ws: WebSocket; name: string }
-
-const clients: Record<string, client> = {}
-
-const getCli = () => {
-  return (Object.entries(clients) as Array<[string, client]>).map(
-    (item: [string, client]) => item[1]
-  )
-}
+const clients: { [index: string]: client } = {}
 
 const sendPeers = () => {
-  const ready = getCli().filter(client => client.name !== '' && client.ws.readyState === 1)
+  const ready = Object.values(clients).filter(
+    client =>
+      client.name.trim().length > 0 && client.with.trim() === '' && client.ws.readyState === 1
+  )
   ready.forEach(item =>
     item.ws.send(
       JSON.stringify({
@@ -34,7 +31,7 @@ const sendPeers = () => {
         peers: ready.map(client => {
           return { name: client.name, index: client.index }
         }),
-        count: getCli().filter(itm => itm.ws.readyState === 1).length,
+        count: Object.values(clients).filter(itm => itm.ws.readyState === 1).length,
       })
     )
   )
@@ -51,14 +48,14 @@ const isInCli = (index: string | Array<string>) => {
 }
 
 const cleanClients = () => {
-  const filtered = getCli().filter(client => client.ws.readyState !== 1)
+  const filtered = Object.values(clients).filter(client => client.ws.readyState !== 1)
   const sendNeeded = filtered.length > 0
   filtered.forEach(client => delete clients[client.index])
   if (sendNeeded) return sendPeers()
   else false
 }
 
-const expando = () => {
+const piskvorky = () => {
   const app = express()
 
   const privateKey = process.env.PRIVATE_KEY
@@ -116,9 +113,9 @@ const expando = () => {
       if (!keys.includes('index')) return
       if (!isInCli(parsed.index)) {
         if (['reset', 'ping', 'nick'].includes(parsed.do)) {
-          clients[parsed.index] = { index: parsed.index, name: '', ws: ws }
+          clients[parsed.index] = { index: parsed.index, name: '', ws: ws, with: '' }
           if (parsed.do === 'reset' && parsed.room !== '') {
-            const found = getCli().find(
+            const found = Object.values(clients).find(
               clnt => clnt.index && clnt.index !== parsed.index && clnt.ws.readyState === 1
             )
             found?.ws.send(JSON.stringify({ do: 'pong', index: found.index, to: parsed.index }))
@@ -146,7 +143,9 @@ const expando = () => {
             clients[parsed.index].ws.send(
               JSON.stringify({
                 do: 'pong',
-                count: getCli().filter(client => client.ws.readyState === 1).length,
+                count: Object.values(clients).filter(
+                  client => client.ws.readyState === 1 && client.with.trim() === ''
+                ).length,
               })
             )
           break
@@ -159,6 +158,23 @@ const expando = () => {
             ws.send(JSON.stringify({ peers: { index: parsed.index, name: parsed.name } }))
           }
           break
+
+        case 'start':
+          if (keys.includes('with')) {
+            clients[parsed.index].with = parsed.with
+            clients[parsed.with].with = parsed.index
+            clients[parsed.with].ws.send(
+              JSON.stringify({ do: 'start', index: parsed.with, to: parsed.index })
+            )
+          }
+          break
+
+        case 'go':
+          if (keys.includes('col') && keys.includes('row')) {
+            clients[clients[parsed.index].with].ws.send(
+              JSON.stringify({ do: 'go', col: parsed.col, row: parsed.row })
+            )
+          }
       }
     })
   })
@@ -170,4 +186,4 @@ const expando = () => {
   return { socket: wss, server: server }
 }
 
-export default expando
+export default piskvorky

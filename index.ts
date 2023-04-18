@@ -1,3 +1,3 @@
-import expando from './expando'
+import piskvorky from './piskvorky'
 
-expando()
+piskvorky()
